@@ -8,6 +8,7 @@ import requests
 import json
 
 
+# INITIALIZATION ↓
 app = FastAPI()
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -17,15 +18,22 @@ if os.path.exists(dotenv_path):
     API_KEY = os.getenv('API_KEY')
 else:
     raise FileNotFoundError('.env not found, exception raised')
+# INITIALIZATION ↑
 
+
+# FRONTEND ↓
 @app.get('/', response_class=FileResponse)
 def main() -> FileResponse:
-    return FileResponse('view/index.html', status_code=200)
+    return FileResponse('view/build/index.html', status_code=200)
 
 
-@app.get('/static/js/index.js', response_class=FileResponse)
-def get_script() -> FileResponse:
-    return FileResponse('view/static/js/index.js',status_code=200)
+@app.get('/static/js/{file_name}', response_class=FileResponse)
+def get_script(file_name: str) -> FileResponse:
+    return FileResponse(
+        path=f'view/build/static/js/{file_name}',
+        status_code=200
+    )
+# FRONTEND ↑
 
 
 @app.get('/api/inner/ask-polygonscan')
