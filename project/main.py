@@ -9,6 +9,9 @@ import requests
 import json
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sea
+from datetime import datetime
 
 # INITIALIZATION ↓
 app = FastAPI()
@@ -40,21 +43,24 @@ else:
 
 @app.get('/api/inner/ask-polygonscan/statistics/')
 def get_statistics_data(address: str):
-    print('OK!')
     url = 'https://api.polygonscan.com/api' +\
         f'?module=account&action=txlist&address={address}' +\
-            f'&page=1&offset=50&sort=asc&apikey={API_KEY}'
+            f'&sort=asc&apikey={API_KEY}'
     
     request = requests.get(url)
     retrieved_data = json.loads(request.content)['result']
+    
+    if not retrieved_data:
+        return {'status': 'bad response'}
+    
     values_list = [int(dict_['value']) for dict_ in retrieved_data]
     values_array = np.array(values_list)
     result = {
+        'status': 'ok',
         'avgTransactions': np.average(values_array),
         'sumTransactions': np.sum(values_array),
         'amountTransactions': values_array.size,
     }
-    print(result)
     return result
 
 
@@ -68,4 +74,20 @@ def get_display_data(address: str, page: str='1', offset: str='10'):
     values_list = [int(dict_['value']) for dict_ in retrieved_data]
     
     return values_list
+
+
+@app.get('/api/inner/ask-polygonsacan/visualize/')
+def get_visualized_data(address: str):
+    url = 'https://api.polygonscan.com/api' +\
+        f'?module=account&action=txlist&address={address}' +\
+            f'&sort=asc&apikey={API_KEY}'
     
+    request = requests.get(url)
+    retrieved_data = json.loads(request.content)['result']
+    if not retrieved_data:
+        return {'status': 'bad response'}
+    
+    dates = [datetime.fromtimestamp(int(dict_['timeStamp'])) for dict_ in retrieved_data]
+    values = [dict_['value'] for dict_ in retrieved_data]
+    
+    return {'status': 'ok'}
