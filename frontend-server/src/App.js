@@ -15,12 +15,13 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [fetchStatisticsError, setFetchStatisticsError] = useState(false);
   const [fetchListError, setFetchListError] = useState(false)
+  const [fetchListDone, setFetchListDone] = useState(true)
 
   const DisplayStatistics = () => {
     return (
       <>
       <div
-      className='bg-gray-50 text-center border-gray-500 border-2 w-1/3 mx-auto rounded mt-3'
+      className='flex flex-col justify-start items-center bg-[#56F0AA]/[0.9] rounded-xl gap-2 p-2 h-full'
       >
         <div
         className='text-left w-fit mx-auto'>
@@ -31,6 +32,7 @@ function App() {
           <span>Sum of all Transactions: {BigInt(statisticsData?.sumTransactions).toString(10)}</span>
           <br/>
         </div>
+        <img src='./Graph_placeholder.png' placeholder='graph'/>
       </div>
       </>
     )
@@ -40,33 +42,36 @@ function App() {
     return (
       <>
       <div
-      className='bg-gray-50 text-center border-gray-500 border-2 w-1/3 mx-auto rounded mt-3'
+      className='flex flex-col justify-center items-center bg-[#56F0AA]/[0.9] rounded-xl gap-2 p-2 h-full'
       >
         <span className='inline-block mt-5 font-medium text-lg'>List of all Transactions:</span>
         <br/>
-        <div className='px-5'>
-          <table className='border-2 border-gray-400 bg-slate-50 mx-auto w-1/2'>
+        <div className='px-5 w-full'>
+          <table className='mx-auto w-full'>
             <tr>
               <th className='inline-block mr-3'>Number</th><th>Transaction Sum</th>
             </tr>
             {transactionsList?.map((x, index) => {
               return (
                 <tr key={index}>
-                  <td className={(index % 2) ? 'bg-gray-50' : 'bg-gray-100'}>{index+1}</td>
-                  <td className={(index % 2) ? 'bg-gray-50' : 'bg-gray-100'}>{BigInt(x).toString(10)}</td>
+                  <td className={(index % 2) ? 'bg-[#A6FAF4]/[0.9]' : 'bg-[#56F0AA]/[0.9]'}>{index+1}</td>
+                  <td className={(index % 2) ? 'bg-[#A6FAF4]/[0.9]' : 'bg-[#56F0AA]/[0.9]'}>{BigInt(x).toString(10)}</td>
                 </tr>
               )
             })}
           </table>
           <span>Current Page: {currentPage}</span>
         </div>
+        {/* TODO: Previous page */}
         <button 
         type="button" 
         onClick={async (event) => {
           event.preventDefault()
           setCurrentPage(currentPage + 1)
+          setFetchListDone(false)
         }}
-        className='border-2 rounded-sm border-gray-400 bg-gray-100 mb-2 px-1'
+        className={fetchListDone ? 'border-green-700 bg-green-500 border-2 rounded-lg  mb-2 px-1' : 'border-red-700 bg-red-500 border-2 rounded-lg  mb-2 px-1'}
+        disabled = {!fetchListDone}
         >
           NextPage
         </button>
@@ -94,8 +99,10 @@ function App() {
       result.json().then((parsedResult) => {
         if (parsedResult.length) {
           setTransactionsList(parsedResult)
+          setFetchListDone(true)
         } else {
           setFetchListError(true)
+          setFetchListDone(false)
         }
       })
     })
@@ -114,29 +121,37 @@ function App() {
 
 
   return (
-    <div className="App">
-        <form onSubmit={handleSubmit} className='bg-yellow-50 border-b-2 border-amber-700'>
-          <label htmlFor="walletAddress" className='my-6'>Enter wallet address:</label>
-          <br/>
-          <input
-            id="walletAddress" 
-            name="walletAddress" 
-            type="text" 
-            placeholder="Wallet address"
-            value={formData}
-            onChange={handleInput}
-            className='border-solid border-2 rounded-sm border-gray-400 px-1 w-1/3'
-          />
-          <br/>
-          <button
-          className='border-solid border-2 rounded border-gray-400 bg-gray-100 my-2 px-1'
-          >Get Transactions</button>
-        </form>
-        {statisticsData ? DisplayStatistics() : ''}
-        {fetchStatisticsError ? 'Failed to get statistics' : ''}
+    <div className="App font-sans text-gray-800 bg-gradient-to-tr from-[#5A56F0] from-1% via-[#5A90FA] via-30% to-[#5DBBE3] w-full h-full flex flex-col items-center justify-center gap-4">
+        <div className='flex flex-col justify-center items-center h-1/5 w-1/3 bg-[#56F0AA]/[0.9] rounded-xl gap-2'>
+        <label htmlFor="walletAddress" className=''>Enter wallet address:</label>
 
-        {transactionsList ? DisplayTransactions() : ''}
-        {fetchListError ? 'Failed to get Transactions List' : ''}
+            <input
+              id="walletAddress"
+              name="walletAddress"
+              type="text"
+              placeholder="Wallet address"
+              value={formData}
+              onChange={handleInput}
+              className='border-solid border-2 rounded-sm border-gray-400 w-[75%] px-2'
+            />
+            
+
+          <button
+            onClick={handleSubmit}
+            className='border-solid border-2 rounded border-gray-400 bg-gray-100 w-fit px-2'
+            >Get Transactions</button>
+        </div>
+        <div className='grid grid-cols-2 gap-4 h-3/5 px-4'>
+          <div className='col-span-1'>
+            {transactionsList ? DisplayTransactions() : ''}
+            {fetchListError ? 'Failed to get Transactions List' : ''}
+          </div>
+          <div className='col-span-1'>
+            {statisticsData ? DisplayStatistics() : ''}
+            {fetchStatisticsError ? 'Failed to get Statistics' : ''}
+          </div>
+        </div>
+        
     </div>
   );
 }

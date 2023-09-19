@@ -7,11 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import requests
 import json
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sea
-from datetime import datetime
 
 # INITIALIZATION ↓
 app = FastAPI()
@@ -87,7 +83,13 @@ def get_visualized_data(address: str):
     if not retrieved_data:
         return {'status': 'bad response'}
     
-    dates = [datetime.fromtimestamp(int(dict_['timeStamp'])) for dict_ in retrieved_data]
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sea
+    from datetime import datetime
+    import plotly.express as px
+    
+    dates = [datetime.fromtimestamp(int(dict_['timeStamp'])).strftime('%Y-%m') for dict_ in retrieved_data]
     values = [dict_['value'] for dict_ in retrieved_data]
     
     return {'status': 'ok'}
