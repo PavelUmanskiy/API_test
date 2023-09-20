@@ -2,12 +2,13 @@ from dotenv import load_dotenv
 import os
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import requests
 import json
-import numpy as np
+
+from data_procesing import compose_interactive_graph_as_html, prepare_statistics
 
 # INITIALIZATION ↓
 app = FastAPI()
@@ -49,14 +50,8 @@ def get_statistics_data(address: str):
     if not retrieved_data:
         return {'status': 'bad response'}
     
-    values_list = [int(dict_['value']) for dict_ in retrieved_data]
-    values_array = np.array(values_list)
-    result = {
-        'status': 'ok',
-        'avgTransactions': np.average(values_array),
-        'sumTransactions': np.sum(values_array),
-        'amountTransactions': values_array.size,
-    }
+    result = {'status': 'ok'}
+    result.update(prepare_statistics(retrieved_data))
     return result
 
 
@@ -72,7 +67,7 @@ def get_display_data(address: str, page: str='1', offset: str='10'):
     return values_list
 
 
-@app.get('/api/inner/ask-polygonsacan/visualize/')
+@app.get('/api/inner/ask-polygonsacan/visualize/', response_class=HTMLResponse)
 def get_visualized_data(address: str):
     url = 'https://api.polygonscan.com/api' +\
         f'?module=account&action=txlist&address={address}' +\
@@ -83,13 +78,5 @@ def get_visualized_data(address: str):
     if not retrieved_data:
         return {'status': 'bad response'}
     
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    import seaborn as sea
-    from datetime import datetime
-    import plotly.express as px
-    
-    dates = [datetime.fromtimestamp(int(dict_['timeStamp'])).strftime('%Y-%m') for dict_ in retrieved_data]
-    values = [dict_['value'] for dict_ in retrieved_data]
-    
-    return {'status': 'ok'}
+    html_string = compose_interactive_graph_as_html(retrieved_data)
+    return html_string

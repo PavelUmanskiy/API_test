@@ -1,10 +1,12 @@
 import './App.css';
 import {useEffect, useState} from 'react';
 /* global BigInt */
+// do NOT remove the comment above ↑ (will result in compile error)
 
 function App() {
   const [statisticsData, setStatisticsData] = useState(null);
   const [transactionsList, setTransactionsList] = useState(null);
+  const [graphButtonClicked, setGraphButtonClicked] = useState(false);
 
   const [formData, setFormData] = useState('');
   const handleInput = (event) => {
@@ -14,8 +16,8 @@ function App() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [fetchStatisticsError, setFetchStatisticsError] = useState(false);
-  const [fetchListError, setFetchListError] = useState(false)
-  const [fetchListDone, setFetchListDone] = useState(true)
+  const [fetchListError, setFetchListError] = useState(false);
+  const [fetchListDone, setFetchListDone] = useState(true);
 
   const DisplayStatistics = () => {
     return (
@@ -32,11 +34,30 @@ function App() {
           <span>Sum of all Transactions: {BigInt(statisticsData?.sumTransactions).toString(10)}</span>
           <br/>
         </div>
-        <img src='./Graph_placeholder.png' placeholder='graph'/>
+        {formData ? graphButtonClicked ? <span className='text-xs'>Zoom out if you don't see the data, click and drag to zoom in</span> : <DisplayGetGraphButton/> : ''}
+        
+        {graphButtonClicked ? DisplayGraph() : ''}
       </div>
       </>
     )
   };
+
+  const DisplayGetGraphButton = () => {
+    return (
+      <>
+        <button 
+        type="button" 
+        onClick={async (event) => {
+          event.preventDefault()
+          setGraphButtonClicked(true)
+        }}
+        className={graphButtonClicked ? 'border-red-700 bg-red-500 border-2 rounded-lg  mb-2 px-1' : 'border-green-700 bg-green-500 border-2 rounded-lg  mb-2 px-1'}
+        disabled = {graphButtonClicked}
+        >Get Graph
+        </button>
+      </>
+    )
+  }
 
   const DisplayTransactions = () => {
     return (
@@ -54,7 +75,7 @@ function App() {
             {transactionsList?.map((x, index) => {
               return (
                 <tr key={index}>
-                  <td className={(index % 2) ? 'bg-[#A6FAF4]/[0.9]' : 'bg-[#56F0AA]/[0.9]'}>{index+1}</td>
+                  <td className={(index % 2) ? 'bg-[#A6FAF4]/[0.9]' : 'bg-[#56F0AA]/[0.9]'}>{ (currentPage === 1) ? (index + 1) : currentPage * 10 + (index+1)}</td>
                   <td className={(index % 2) ? 'bg-[#A6FAF4]/[0.9]' : 'bg-[#56F0AA]/[0.9]'}>{BigInt(x).toString(10)}</td>
                 </tr>
               )
@@ -62,7 +83,6 @@ function App() {
           </table>
           <span>Current Page: {currentPage}</span>
         </div>
-        {/* TODO: Previous page */}
         <button 
         type="button" 
         onClick={async (event) => {
@@ -73,43 +93,61 @@ function App() {
         className={fetchListDone ? 'border-green-700 bg-green-500 border-2 rounded-lg  mb-2 px-1' : 'border-red-700 bg-red-500 border-2 rounded-lg  mb-2 px-1'}
         disabled = {!fetchListDone}
         >
-          NextPage
+          Next Page
         </button>
       </div>
       </>
     )
   };
 
+  const DisplayGraph = () => {
+    return (
+      <>
+        <iframe 
+        src={`http://127.0.0.1:8000/api/inner/ask-polygonsacan/visualize/?address=${formData}`}
+        className='border-0'
+        height={'370'}
+        width={'750'}
+        title='interactiveGraphIFrame'></iframe>
+      </>
+    )
+  }
+
   const fetchStatistics = () => {
     const statisticsURL = `http://127.0.0.1:8000/api/inner/ask-polygonscan/statistics/?address=${formData}`;
-    fetch(statisticsURL).then((result) => {
-      result.json().then((parsedResult) => {
-        if (parsedResult.status !== 'bad response') {
-          setStatisticsData(parsedResult)
-        } else {
-          setFetchStatisticsError(true)
-        }
+    if (formData.length) {
+      fetch(statisticsURL).then((result) => {
+        result.json().then((parsedResult) => {
+          if (parsedResult.status !== 'bad response') {
+            setStatisticsData(parsedResult)
+          } else {
+            setFetchStatisticsError(true)
+          }
+        })
       })
-    })
+    }
   };
 
   const fetchList = () => {
     const listURL = `http://127.0.0.1:8000/api/inner/ask-polygonscan/paginated/?address=${formData}&page=${currentPage}`;
-    fetch(listURL).then((result) => {
-      result.json().then((parsedResult) => {
-        if (parsedResult.length) {
-          setTransactionsList(parsedResult)
-          setFetchListDone(true)
-        } else {
-          setFetchListError(true)
-          setFetchListDone(false)
-        }
+    if (formData.length) {
+      fetch(listURL).then((result) => {
+        result.json().then((parsedResult) => {
+          if (parsedResult.length) {
+            setTransactionsList(parsedResult)
+            setFetchListDone(true)
+          } else {
+            setFetchListError(true)
+            setFetchListDone(false)
+          }
+        })
       })
-    })
+    }
   };
 
   useEffect(() => {
     if (currentPage !== 1) fetchList()
+    // do NOT remove the comment below ↓ (will result in compile error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage])
 
