@@ -19,8 +19,8 @@ Frontend is not pre-build and runs in dev mode.
     - tailwindcss: 3.3.3+
 
 ## Preparations
-> It is highly suggested to create a python venv for this app
-> Create a `.env` file inside a `project/project/` folder, then insert your API_KEY like that:
+- It is highly suggested to create a python venv for this app
+- Create a `.env` file inside a `project/project/` folder, then insert your API_KEY like that:
 ```
 API_KEY='<YOUR POLYGONSCAN API KEY>'
 ```
